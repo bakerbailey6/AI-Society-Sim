@@ -1,0 +1,336 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>world.terrain &mdash; Emergent AI Society Simulator 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Emergent AI Society Simulator
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../design_patterns.html">Design Patterns</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Emergent AI Society Simulator</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">world.terrain</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for world.terrain</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Terrain Module - Immutable Terrain Type System</span>
+
+<span class="sd">This module demonstrates the **Immutable Pattern** for terrain data.</span>
+<span class="sd">TerrainType objects are immutable and shared, ensuring consistent</span>
+<span class="sd">behavior across the simulation.</span>
+
+<span class="sd">Design Patterns:</span>
+<span class="sd">    - Immutable Pattern: TerrainProperties cannot be modified after creation</span>
+
+<span class="sd">SOLID Principles:</span>
+<span class="sd">    - Single Responsibility: Manages only terrain type information</span>
+<span class="sd">    - Open/Closed: New terrain types can be added without modifying existing code</span>
+<span class="sd">    - Dependency Inversion: Depends on abstract enum, not concrete implementations</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span>
+
+
+<div class="viewcode-block" id="TerrainTypeEnum">
+<a class="viewcode-back" href="../../api/modules.html#world.terrain.TerrainTypeEnum">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TerrainTypeEnum</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Enumeration of all terrain types in the world.</span>
+
+<span class="sd">    Each terrain type has different properties affecting resource</span>
+<span class="sd">    generation, movement speed, and agent behavior.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        PLAINS: Open grassland, easy traversal, moderate resources</span>
+<span class="sd">        FOREST: Dense woods, slower movement, high food resources</span>
+<span class="sd">        MOUNTAIN: Rocky terrain, difficult traversal, high material resources</span>
+<span class="sd">        WATER: Lakes and rivers, blocks most movement, water resource source</span>
+<span class="sd">        DESERT: Arid land, harsh conditions, scarce resources</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">PLAINS</span> <span class="o">=</span> <span class="s2">&quot;plains&quot;</span>
+    <span class="n">FOREST</span> <span class="o">=</span> <span class="s2">&quot;forest&quot;</span>
+    <span class="n">MOUNTAIN</span> <span class="o">=</span> <span class="s2">&quot;mountain&quot;</span>
+    <span class="n">WATER</span> <span class="o">=</span> <span class="s2">&quot;water&quot;</span>
+    <span class="n">DESERT</span> <span class="o">=</span> <span class="s2">&quot;desert&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="TerrainProperties">
+<a class="viewcode-back" href="../../api/modules.html#world.terrain.TerrainProperties">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TerrainProperties</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Immutable properties associated with a terrain type.</span>
+
+<span class="sd">    The frozen=True parameter ensures these properties cannot be</span>
+<span class="sd">    modified after creation, maintaining consistency across the simulation.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        terrain_type (TerrainTypeEnum): The type of terrain</span>
+<span class="sd">        movement_cost (float): Movement cost multiplier (1.0 = normal, &gt;1.0 = slower)</span>
+<span class="sd">        traversable (bool): Whether agents can move through this terrain</span>
+<span class="sd">        resource_fertility (float): Multiplier for resource generation (0.0-2.0)</span>
+<span class="sd">        description (str): Human-readable description of the terrain</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; props = TerrainProperties(</span>
+<span class="sd">        ...     terrain_type=TerrainTypeEnum.FOREST,</span>
+<span class="sd">        ...     movement_cost=1.5,</span>
+<span class="sd">        ...     traversable=True,</span>
+<span class="sd">        ...     resource_fertility=1.8,</span>
+<span class="sd">        ...     description=&quot;Dense forest with abundant resources&quot;</span>
+<span class="sd">        ... )</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">terrain_type</span><span class="p">:</span> <span class="n">TerrainTypeEnum</span>
+    <span class="n">movement_cost</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">traversable</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">resource_fertility</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
+
+<div class="viewcode-block" id="TerrainProperties.__post_init__">
+<a class="viewcode-back" href="../../api/modules.html#world.terrain.TerrainProperties.__post_init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validate terrain properties after initialization.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If properties are outside valid ranges</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">movement_cost</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Movement cost cannot be negative&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resource_fertility</span> <span class="o">&lt;=</span> <span class="mf">2.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Resource fertility must be between 0.0 and 2.0&quot;</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TerrainFactory">
+<a class="viewcode-back" href="../../api/modules.html#world.terrain.TerrainFactory">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TerrainFactory</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Factory for creating and caching immutable TerrainProperties.</span>
+
+<span class="sd">    This class ensures that only one instance of each terrain type&#39;s</span>
+<span class="sd">    properties exists, supporting the immutable pattern through caching.</span>
+
+<span class="sd">    The factory pattern allows centralized creation of terrain properties</span>
+<span class="sd">    while maintaining immutability guarantees.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Class-level cache of terrain properties (shared across all instances)</span>
+    <span class="n">_terrain_cache</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">TerrainTypeEnum</span><span class="p">,</span> <span class="n">TerrainProperties</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_defaults</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize default terrain properties for all terrain types.</span>
+
+<span class="sd">        This method is called once to populate the cache with standard</span>
+<span class="sd">        terrain configurations. These can be accessed but never modified.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_terrain_cache</span><span class="p">:</span>
+            <span class="k">return</span>  <span class="c1"># Already initialized</span>
+
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_terrain_cache</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">TerrainTypeEnum</span><span class="o">.</span><span class="n">PLAINS</span><span class="p">:</span> <span class="n">TerrainProperties</span><span class="p">(</span>
+                <span class="n">terrain_type</span><span class="o">=</span><span class="n">TerrainTypeEnum</span><span class="o">.</span><span class="n">PLAINS</span><span class="p">,</span>
+                <span class="n">movement_cost</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                <span class="n">traversable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">resource_fertility</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Open grassland with moderate resources and easy movement&quot;</span>
+            <span class="p">),</span>
+            <span class="n">TerrainTypeEnum</span><span class="o">.</span><span class="n">FOREST</span><span class="p">:</span> <span class="n">TerrainProperties</span><span class="p">(</span>
+                <span class="n">terrain_type</span><span class="o">=</span><span class="n">TerrainTypeEnum</span><span class="o">.</span><span class="n">FOREST</span><span class="p">,</span>
+                <span class="n">movement_cost</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+                <span class="n">traversable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">resource_fertility</span><span class="o">=</span><span class="mf">1.8</span><span class="p">,</span>
+                <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Dense woodland with abundant food but slower movement&quot;</span>
+            <span class="p">),</span>
+            <span class="n">TerrainTypeEnum</span><span class="o">.</span><span class="n">MOUNTAIN</span><span class="p">:</span> <span class="n">TerrainProperties</span><span class="p">(</span>
+                <span class="n">terrain_type</span><span class="o">=</span><span class="n">TerrainTypeEnum</span><span class="o">.</span><span class="n">MOUNTAIN</span><span class="p">,</span>
+                <span class="n">movement_cost</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span>
+                <span class="n">traversable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">resource_fertility</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Rocky highlands rich in materials but difficult to traverse&quot;</span>
+            <span class="p">),</span>
+            <span class="n">TerrainTypeEnum</span><span class="o">.</span><span class="n">WATER</span><span class="p">:</span> <span class="n">TerrainProperties</span><span class="p">(</span>
+                <span class="n">terrain_type</span><span class="o">=</span><span class="n">TerrainTypeEnum</span><span class="o">.</span><span class="n">WATER</span><span class="p">,</span>
+                <span class="n">movement_cost</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">),</span>
+                <span class="n">traversable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">resource_fertility</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span>
+                <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Rivers and lakes providing water but blocking passage&quot;</span>
+            <span class="p">),</span>
+            <span class="n">TerrainTypeEnum</span><span class="o">.</span><span class="n">DESERT</span><span class="p">:</span> <span class="n">TerrainProperties</span><span class="p">(</span>
+                <span class="n">terrain_type</span><span class="o">=</span><span class="n">TerrainTypeEnum</span><span class="o">.</span><span class="n">DESERT</span><span class="p">,</span>
+                <span class="n">movement_cost</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
+                <span class="n">traversable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">resource_fertility</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Arid wasteland with scarce resources and harsh conditions&quot;</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="TerrainFactory.get_properties">
+<a class="viewcode-back" href="../../api/modules.html#world.terrain.TerrainFactory.get_properties">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_properties</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">terrain_type</span><span class="p">:</span> <span class="n">TerrainTypeEnum</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TerrainProperties</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the immutable properties for a given terrain type.</span>
+
+<span class="sd">        This method implements lazy initialization and caching to ensure</span>
+<span class="sd">        only one instance of each TerrainProperties exists.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            terrain_type (TerrainTypeEnum): The terrain type to look up</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            TerrainProperties: Immutable properties for the terrain type</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; props = TerrainFactory.get_properties(TerrainTypeEnum.FOREST)</span>
+<span class="sd">            &gt;&gt;&gt; print(props.movement_cost)</span>
+<span class="sd">            1.5</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_initialize_defaults</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_terrain_cache</span><span class="p">[</span><span class="n">terrain_type</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="TerrainFactory.register_custom_terrain">
+<a class="viewcode-back" href="../../api/modules.html#world.terrain.TerrainFactory.register_custom_terrain">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">register_custom_terrain</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">terrain_type</span><span class="p">:</span> <span class="n">TerrainTypeEnum</span><span class="p">,</span>
+        <span class="n">properties</span><span class="p">:</span> <span class="n">TerrainProperties</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Register custom terrain properties.</span>
+
+<span class="sd">        Allows extension of terrain types without modifying existing code,</span>
+<span class="sd">        demonstrating the Open/Closed Principle.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            terrain_type (TerrainTypeEnum): The terrain type to register</span>
+<span class="sd">            properties (TerrainProperties): The immutable properties to associate</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If terrain type already exists in cache</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            This should only be called during initialization. Once the</span>
+<span class="sd">            simulation starts, terrain properties should not change.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_initialize_defaults</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">terrain_type</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_terrain_cache</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Terrain type </span><span class="si">{</span><span class="n">terrain_type</span><span class="si">}</span><span class="s2"> already registered&quot;</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_terrain_cache</span><span class="p">[</span><span class="n">terrain_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">properties</span></div>
+
+
+<div class="viewcode-block" id="TerrainFactory.get_all_terrain_types">
+<a class="viewcode-back" href="../../api/modules.html#world.terrain.TerrainFactory.get_all_terrain_types">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_all_terrain_types</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">TerrainTypeEnum</span><span class="p">,</span> <span class="n">TerrainProperties</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get all registered terrain types and their properties.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dict[TerrainTypeEnum, TerrainProperties]: Mapping of all terrain types</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_initialize_defaults</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_terrain_cache</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, CS455 Design Patterns.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
