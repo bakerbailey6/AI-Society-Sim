@@ -1,0 +1,299 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>world.position &mdash; Emergent AI Society Simulator 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Emergent AI Society Simulator
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../design_patterns.html">Design Patterns</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Emergent AI Society Simulator</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">world.position</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for world.position</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Position Module - Immutable Position Value Object</span>
+
+<span class="sd">This module demonstrates the **Immutable Pattern** by providing an immutable</span>
+<span class="sd">coordinate representation for the grid-based world.</span>
+
+<span class="sd">Design Patterns:</span>
+<span class="sd">    - Immutable Pattern: Position objects cannot be modified after creation</span>
+
+<span class="sd">SOLID Principles:</span>
+<span class="sd">    - Single Responsibility: Manages only coordinate representation and operations</span>
+<span class="sd">    - Open/Closed: Extensible through new methods without modifying existing ones</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+
+
+<div class="viewcode-block" id="Position">
+<a class="viewcode-back" href="../../api/modules.html#world.position.Position">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Position</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Immutable value object representing a position in 2D grid space.</span>
+
+<span class="sd">    The frozen=True parameter makes this class immutable, preventing</span>
+<span class="sd">    modification after instantiation. This ensures thread-safety and</span>
+<span class="sd">    predictable behavior when positions are shared across the system.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        x (int): The x-coordinate in the grid</span>
+<span class="sd">        y (int): The y-coordinate in the grid</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; pos1 = Position(5, 10)</span>
+<span class="sd">        &gt;&gt;&gt; pos2 = Position(8, 14)</span>
+<span class="sd">        &gt;&gt;&gt; distance = pos1.distance_to(pos2)</span>
+<span class="sd">        &gt;&gt;&gt; neighbors = pos1.get_neighbors()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">y</span><span class="p">:</span> <span class="nb">int</span>
+
+<div class="viewcode-block" id="Position.distance_to">
+<a class="viewcode-back" href="../../api/modules.html#world.position.Position.distance_to">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">distance_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Position</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate Euclidean distance to another position.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other (Position): The target position</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: The Euclidean distance between positions</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; pos1 = Position(0, 0)</span>
+<span class="sd">            &gt;&gt;&gt; pos2 = Position(3, 4)</span>
+<span class="sd">            &gt;&gt;&gt; pos1.distance_to(pos2)</span>
+<span class="sd">            5.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">x</span>
+        <span class="n">dy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">y</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dx</span> <span class="o">*</span> <span class="n">dx</span> <span class="o">+</span> <span class="n">dy</span> <span class="o">*</span> <span class="n">dy</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Position.manhattan_distance_to">
+<a class="viewcode-back" href="../../api/modules.html#world.position.Position.manhattan_distance_to">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">manhattan_distance_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Position</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate Manhattan (grid) distance to another position.</span>
+
+<span class="sd">        Manhattan distance is the sum of absolute differences in coordinates,</span>
+<span class="sd">        representing the distance when movement is restricted to grid lines.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other (Position): The target position</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: The Manhattan distance between positions</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; pos1 = Position(0, 0)</span>
+<span class="sd">            &gt;&gt;&gt; pos2 = Position(3, 4)</span>
+<span class="sd">            &gt;&gt;&gt; pos1.manhattan_distance_to(pos2)</span>
+<span class="sd">            7</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">y</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Position.get_neighbors">
+<a class="viewcode-back" href="../../api/modules.html#world.position.Position.get_neighbors">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">include_diagonals</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Position</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get all neighboring positions.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            include_diagonals (bool): If True, includes diagonal neighbors (8 total).</span>
+<span class="sd">                                     If False, only includes cardinal directions (4 total).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List[Position]: List of neighboring positions</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; pos = Position(5, 5)</span>
+<span class="sd">            &gt;&gt;&gt; len(pos.get_neighbors(include_diagonals=False))</span>
+<span class="sd">            4</span>
+<span class="sd">            &gt;&gt;&gt; len(pos.get_neighbors(include_diagonals=True))</span>
+<span class="sd">            8</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">neighbors</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">Position</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">),</span>      <span class="c1"># East</span>
+            <span class="n">Position</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">),</span>      <span class="c1"># West</span>
+            <span class="n">Position</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>      <span class="c1"># North</span>
+            <span class="n">Position</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>      <span class="c1"># South</span>
+        <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">include_diagonals</span><span class="p">:</span>
+            <span class="n">neighbors</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+                <span class="n">Position</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>  <span class="c1"># Northeast</span>
+                <span class="n">Position</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>  <span class="c1"># Southeast</span>
+                <span class="n">Position</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>  <span class="c1"># Northwest</span>
+                <span class="n">Position</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>  <span class="c1"># Southwest</span>
+            <span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">neighbors</span></div>
+
+
+<div class="viewcode-block" id="Position.is_adjacent_to">
+<a class="viewcode-back" href="../../api/modules.html#world.position.Position.is_adjacent_to">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_adjacent_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Position</span><span class="p">,</span> <span class="n">include_diagonals</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if another position is adjacent to this one.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other (Position): The position to check</span>
+<span class="sd">            include_diagonals (bool): If True, diagonal positions count as adjacent</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if positions are adjacent, False otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">other</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_neighbors</span><span class="p">(</span><span class="n">include_diagonals</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Position.is_within_bounds">
+<a class="viewcode-back" href="../../api/modules.html#world.position.Position.is_within_bounds">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_within_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if this position is within given bounds.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            width (int): Maximum x-coordinate (exclusive)</span>
+<span class="sd">            height (int): Maximum y-coordinate (exclusive)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if position is within bounds [0, width) x [0, height)</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; pos = Position(5, 5)</span>
+<span class="sd">            &gt;&gt;&gt; pos.is_within_bounds(10, 10)</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; pos.is_within_bounds(5, 5)</span>
+<span class="sd">            False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">&lt;</span> <span class="n">width</span> <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">&lt;</span> <span class="n">height</span></div>
+
+
+<div class="viewcode-block" id="Position.to_tuple">
+<a class="viewcode-back" href="../../api/modules.html#world.position.Position.to_tuple">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_tuple</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert position to a tuple.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple[int, int]: The (x, y) coordinates as a tuple</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Position.__str__">
+<a class="viewcode-back" href="../../api/modules.html#world.position.Position.__str__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;String representation of the position.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="si">}</span><span class="s2">)&quot;</span></div>
+
+
+<div class="viewcode-block" id="Position.__repr__">
+<a class="viewcode-back" href="../../api/modules.html#world.position.Position.__repr__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Developer-friendly representation of the position.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Position(x=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="si">}</span><span class="s2">, y=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="si">}</span><span class="s2">)&quot;</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, CS455 Design Patterns.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
