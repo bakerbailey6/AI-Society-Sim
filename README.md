@@ -71,3 +71,39 @@ The project demonstrates key design patterns through a clean, modular architectu
 - **Command Pattern**: Abstract Action class for all executable actions
 - **Concrete Actions**: Move, Gather, Trade, Attack, FormAlliance
 
+## Running the simulation driver
+
+The repository now includes a small command-line driver that wires together the
+world, agent factories, and event logger for quick experiments.
+
+### Quickstart
+
+```bash
+python -m src.main --steps 5 --world-width 12 --world-height 12 --basic-agents 3 --learning-agents 1 --ai-agents 1 --npc-agents 1
+```
+
+### Common options
+
+- `--world-width`, `--world-height`: Grid dimensions (default `12x12`).
+- `--steps`: Number of simulation steps to execute (default `5`).
+- `--seed`: Random seed for reproducible layouts and agent placement.
+- `--world-type`: Choose `eager` (default) or `lazy` world implementations.
+- `--resource-density`: Probability a traversable cell starts with a resource (default `0.25`).
+- `--basic-agents`, `--learning-agents`, `--ai-agents`, `--npc-agents`: How many of each agent type to spawn.
+- `--log-file`: Optional path to write the event log for offline inspection.
+
+At the end of the run, a summary of steps completed, agent counts, and total
+resources is printed to stdout. When `--log-file` is provided, the textual event
+stream is written to the requested location.
+
+### Smoke test
+
+To verify the entrypoint runs in your environment, execute the bundled script:
+
+```bash
+bash scripts/smoke_test.sh
+```
+
+The script runs a two-step simulation on a small map and will exit non-zero if
+any errors occur.
+

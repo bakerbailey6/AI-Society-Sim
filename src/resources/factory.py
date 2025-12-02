@@ -20,7 +20,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 import random
 
-from resource import Resource, Food, Material, Water, ResourceType
+from resources.resource import Resource, Food, Material, Water, ResourceType
 
 
 class ResourceFactory(ABC):

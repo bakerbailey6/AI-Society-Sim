@@ -28,7 +28,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from resources.resource import Resource
 
 
-class Cell(ABC, IObservable):
+class Cell(IObservable, ABC):
     """
     Abstract base class for grid cells in the world.
 

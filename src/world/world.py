@@ -14,7 +14,7 @@ SOLID Principles:
 """
 
 from __future__ import annotations
-from abc import ABC, abstractmethod
+from abc import ABC, ABCMeta, abstractmethod
 from typing import Optional, List, Dict
 from threading import Lock
 
@@ -24,7 +24,7 @@ from iterators import GridIterator, AllCellsIterator
 from events import WorldEvent, TimeStepEvent, EventLogger
 
 
-class SingletonMeta(type):
+class SingletonMeta(ABCMeta):
     """
     Metaclass for implementing the Singleton pattern.
 

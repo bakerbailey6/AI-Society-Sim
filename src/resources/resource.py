@@ -42,7 +42,7 @@ class ResourceType(Enum):
     WATER = "water"
 
 
-class Resource(ABC, IObservable):
+class Resource(IObservable, ABC):
     """
     Abstract base class for all resources in the world.
 
