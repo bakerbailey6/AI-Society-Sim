@@ -71,39 +71,78 @@ The project demonstrates key design patterns through a clean, modular architectu
 - **Command Pattern**: Abstract Action class for all executable actions
 - **Concrete Actions**: Move, Gather, Trade, Attack, FormAlliance
 
-## Running the simulation driver
+## Installation
 
-The repository now includes a small command-line driver that wires together the
-world, agent factories, and event logger for quick experiments.
+### Prerequisites
+- Python 3.8 or higher
+- pip (Python package installer)
 
-### Quickstart
+### Setup
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/AI-Society-Sim.git
+   cd AI-Society-Sim
+   ```
 
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+## Documentation
+
+This project includes comprehensive Sphinx documentation covering:
+- Architecture and design patterns
+- API reference for all modules
+- Usage examples and guides
+
+### Building Documentation
+
+To build the HTML documentation locally:
+
+**On Windows:**
 ```bash
-python -m src.main --steps 5 --world-width 12 --world-height 12 --basic-agents 3 --learning-agents 1 --ai-agents 1 --npc-agents 1
+cd docs
+sphinx-build -M html . _build
 ```
 
-### Common options
-
-- `--world-width`, `--world-height`: Grid dimensions (default `12x12`).
-- `--steps`: Number of simulation steps to execute (default `5`).
-- `--seed`: Random seed for reproducible layouts and agent placement.
-- `--world-type`: Choose `eager` (default) or `lazy` world implementations.
-- `--resource-density`: Probability a traversable cell starts with a resource (default `0.25`).
-- `--basic-agents`, `--learning-agents`, `--ai-agents`, `--npc-agents`: How many of each agent type to spawn.
-- `--log-file`: Optional path to write the event log for offline inspection.
-
-At the end of the run, a summary of steps completed, agent counts, and total
-resources is printed to stdout. When `--log-file` is provided, the textual event
-stream is written to the requested location.
-
-### Smoke test
-
-To verify the entrypoint runs in your environment, execute the bundled script:
-
+**On Linux/Mac:**
 ```bash
-bash scripts/smoke_test.sh
+cd docs
+make html
 ```
 
-The script runs a two-step simulation on a small map and will exit non-zero if
-any errors occur.
+The generated documentation will be available at `docs/_build/html/index.html`. Open this file in your web browser to view the documentation.
+
+### Viewing Documentation
+
+After building, open the documentation in your browser:
+```bash
+# Windows
+start docs/_build/html/index.html
+
+# Mac
+open docs/_build/html/index.html
+
+# Linux
+xdg-open docs/_build/html/index.html
+```
+
+### ReadTheDocs
+
+The documentation is also available online at ReadTheDocs (coming soon).
+
+## Design Patterns
+
+This project demonstrates 16 fully implemented design patterns and 4 partially implemented patterns. For detailed documentation of all patterns used, see:
+- [Patterns.md](Patterns.md) - Quick reference guide
+- Full documentation in `docs/design_patterns.rst`
+
+## Contributing
+
+Contributions are welcome! Please ensure your code follows the established design patterns and includes appropriate documentation.
+
+## License
+
+This project is part of CS455 Design Patterns coursework.
 
