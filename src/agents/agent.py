@@ -48,7 +48,7 @@ class AgentState(Enum):
     INACTIVE = "inactive"
 
 
-class Agent(ABC, IObservable):
+class Agent(IObservable, ABC):
     """
     Abstract base class for all agents in the simulation.
 

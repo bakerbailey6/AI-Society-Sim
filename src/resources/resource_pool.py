@@ -18,7 +18,7 @@ from __future__ import annotations
 from typing import Optional, List, Set
 from abc import ABC, abstractmethod
 
-from resource import Resource, ResourceType
+from resources.resource import Resource, ResourceType
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

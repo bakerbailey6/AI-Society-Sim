@@ -18,7 +18,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, Optional
 import copy
 
-from resource import Resource, Food, Material, Water, ResourceType
+from resources.resource import Resource, Food, Material, Water, ResourceType
 
 
 class IPrototype(ABC):
