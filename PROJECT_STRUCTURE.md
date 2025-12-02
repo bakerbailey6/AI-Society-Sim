@@ -26,13 +26,56 @@ AI-Society-Sim/
 │   │   ├── factory.py           # Factory Method pattern
 │   │   ├── prototype.py         # Prototype pattern
 │   │   └── resource_pool.py     # Object Pool pattern
-│   └── generators/               # World generation
+│   ├── generators/               # World generation
+│   │   ├── __init__.py
+│   │   ├── config.py            # Immutable WorldConfig
+│   │   ├── world_generator.py   # Abstract generators
+│   │   └── generator_factory.py # Abstract Factory pattern
+│   ├── agents/                   # Agent system (NEW)
+│   │   ├── __init__.py
+│   │   ├── agent.py             # Abstract Agent base class
+│   │   ├── basic_agent.py       # Simple rule-based agent
+│   │   ├── learning_agent.py    # Q-learning/RL agent
+│   │   ├── ai_agent.py          # LLM-powered agent
+│   │   ├── npc_agent.py         # Scripted behavior agent
+│   │   ├── agent_factory.py     # Factory Method pattern
+│   │   ├── agent_manager.py     # Agent lifecycle management
+│   │   └── traits.py            # Agent characteristics
+│   ├── behavior/                 # Behavior system (NEW)
+│   │   ├── __init__.py
+│   │   ├── sensor.py            # Strategy pattern for perception
+│   │   ├── decision_policy.py   # Strategy pattern for decisions
+│   │   ├── actions.py           # Command pattern for actions
+│   │   ├── action_executor.py   # Action execution system
+│   │   ├── memory.py            # Experience storage
+│   │   └── needs.py             # Agent needs/drives hierarchy
+│   ├── social/                   # Social systems (NEW)
+│   │   ├── __init__.py
+│   │   ├── group.py             # Composite pattern for groups
+│   │   ├── faction.py           # Faction management
+│   │   ├── relationship.py      # Inter-agent relationships
+│   │   ├── communication.py     # Observer pattern for messages
+│   │   └── alliance.py          # Alliance mechanics
+│   ├── technology/               # Technology system (NEW)
+│   │   ├── __init__.py
+│   │   ├── tech_era.py          # State pattern for tech eras
+│   │   ├── tech_tree.py         # Technology dependency graph
+│   │   ├── innovation.py        # Discovery mechanics
+│   │   └── knowledge_base.py    # Agent knowledge storage
+│   ├── economy/                  # Economic system (NEW)
+│   │   ├── __init__.py
+│   │   ├── inventory.py         # Resource storage
+│   │   ├── trade.py             # Trade mechanics
+│   │   ├── marketplace.py       # Mediator pattern for trading
+│   │   └── pricing.py           # Dynamic price calculation
+│   └── simulation/               # Simulation engine (NEW)
 │       ├── __init__.py
-│       ├── config.py            # Immutable WorldConfig
-│       ├── world_generator.py   # Abstract generators
-│       └── generator_factory.py # Abstract Factory pattern
+│       ├── engine.py            # Main simulation loop
+│       ├── scheduler.py         # Agent update ordering
+│       └── analytics.py         # Data collection and analysis
 ├── docs/                         # Generated Sphinx documentation (to be created)
 ├── README.md                     # Project overview
+├── AI_AGENT_DESIGN.md            # Comprehensive agent design document (NEW)
 ├── Patterns.md                   # Design patterns documentation
 ├── PROJECT_STRUCTURE.md          # This file
 └── requirements.txt              # Python dependencies
