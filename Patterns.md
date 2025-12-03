@@ -235,15 +235,35 @@ Cells and terrain are somewhat separated but not a full Bridge pattern. Works fi
 ---
 
 ### Strategy
-**Partially used**
+**Used**
 
 **Where:**
-- [src/generators/generator_factory.py](src/generators/generator_factory.py)
-- [src/resources/factory.py](src/resources/factory.py)
-- [src/world/iterators.py](src/world/iterators.py)
+- [src/policies/policy.py](src/policies/policy.py#L18-L122)
+- [src/policies/selfish.py](src/policies/selfish.py)
+- [src/policies/cooperative.py](src/policies/cooperative.py) (skeleton)
+- [src/policies/aggressive.py](src/policies/aggressive.py) (skeleton)
 
 **Why:**
-Algorithm selection through factories and iterators. Factory pattern already does what we need.
+Decision policies are interchangeable strategies that can be swapped at runtime. Agents can change behavior by switching policies (selfish → cooperative → aggressive).
+
+---
+
+## Behavioral Patterns
+
+### Command
+**Used**
+
+**Where:**
+- [src/actions/action.py](src/actions/action.py#L28-L189)
+- [src/actions/move.py](src/actions/move.py)
+- [src/actions/gather.py](src/actions/gather.py)
+- [src/actions/rest.py](src/actions/rest.py)
+- [src/actions/trade.py](src/actions/trade.py) (skeleton)
+- [src/actions/attack.py](src/actions/attack.py) (skeleton)
+- [src/actions/alliance.py](src/actions/alliance.py) (skeleton)
+
+**Why:**
+Agent actions are encapsulated as command objects with execute(), can_execute(), and undo() methods. Enables queuing, logging, and undoable operations.
 
 ---
 
@@ -275,10 +295,13 @@ WorldGenerator has common steps in base class, subclasses fill in specifics. Not
 
 ## Summary
 
-**Fully implemented:** 16 patterns
+**Fully implemented:** 18 patterns
 - SOLID principles (all 5)
-- Singleton, Immutable, Abstract Factory, Factory Method, Marker, Proxy, Prototype, Object Pool
-- Iterator, Facade, Registry
+- Creational: Singleton, Immutable, Abstract Factory, Factory Method, Marker, Proxy, Prototype, Object Pool
+- Structural: Iterator, Facade, Registry
+- Behavioral: Command, Strategy
 
-**Partially implemented:** 4 patterns
-- Builder, Bridge, Strategy, Template Method
+**Partially implemented:** 3 patterns
+- Builder, Bridge, Template Method
+
+**Note:** Template Method is used throughout (Agent.update(), WorldGenerator) but not as formal standalone implementation.

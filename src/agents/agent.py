@@ -32,6 +32,7 @@ from world.position import Position
 if TYPE_CHECKING:
     from world.world import World
     from traits import AgentTraits
+    from actions.action import Action
 
 
 class AgentState(Enum):
@@ -254,7 +255,7 @@ class Agent(IObservable, ABC):
         pass
 
     @abstractmethod
-    def decide(self, sensor_data: Any) -> Optional[Any]:
+    def decide(self, sensor_data: Any) -> Optional[Action]:
         """
         Phase 2: Decide on an action.
 
@@ -262,33 +263,40 @@ class Agent(IObservable, ABC):
         Based on sensed information and internal state, choose the
         best action to execute.
 
+        This integrates with the Command and Strategy patterns:
+        - Returns Action object (Command pattern)
+        - May delegate to DecisionPolicy (Strategy pattern)
+
         Args:
             sensor_data (Any): Information from the sensing phase
 
         Returns:
-            Optional[Any]: Chosen action to execute, or None for no action
-                          (will be Action type once behavior system is implemented)
+            Optional[Action]: Chosen action to execute, or None for no action
 
         Note:
-            The parameter and return types will be more specific once
-            the behavior system (SensorData, Action) is implemented.
+            sensor_data type is currently Any - will be SensorData type
+            when behavior system is fully implemented.
         """
         pass
 
     @abstractmethod
-    def act(self, action: Any, world: World) -> None:
+    def act(self, action: Action, world: World) -> None:
         """
         Phase 3: Execute the chosen action.
 
         Subclasses must implement their action execution logic here.
+        Typically, this just delegates to action.execute().
+
+        This demonstrates the Command pattern - the action object
+        encapsulates the request and knows how to execute itself.
 
         Args:
-            action (Any): The action to execute (will be Action type)
+            action (Action): The action to execute (Command pattern)
             world (World): The world instance
 
         Note:
-            The action parameter type will be more specific once
-            the behavior system is implemented.
+            Most implementations will simply call action.execute(self, world)
+            to delegate to the Command object.
         """
         pass
 

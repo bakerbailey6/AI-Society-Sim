@@ -31,24 +31,31 @@ AI-Society-Sim/
 │   │   ├── config.py            # Immutable WorldConfig
 │   │   ├── world_generator.py   # Abstract generators
 │   │   └── generator_factory.py # Abstract Factory pattern
-│   ├── agents/                   # Agent system (NEW)
+│   ├── agents/                   # Agent system
 │   │   ├── __init__.py
 │   │   ├── agent.py             # Abstract Agent base class
 │   │   ├── basic_agent.py       # Simple rule-based agent
-│   │   ├── learning_agent.py    # Q-learning/RL agent
-│   │   ├── ai_agent.py          # LLM-powered agent
-│   │   ├── npc_agent.py         # Scripted behavior agent
+│   │   ├── learning_agent.py    # Q-learning/RL agent (skeleton)
+│   │   ├── ai_agent.py          # LLM-powered agent (skeleton)
+│   │   ├── npc_agent.py         # Scripted behavior agent (skeleton)
 │   │   ├── agent_factory.py     # Factory Method pattern
 │   │   ├── agent_manager.py     # Agent lifecycle management
 │   │   └── traits.py            # Agent characteristics
-│   ├── behavior/                 # Behavior system (NEW)
+│   ├── actions/                  # Action system (Command pattern) ✓ IMPLEMENTED
 │   │   ├── __init__.py
-│   │   ├── sensor.py            # Strategy pattern for perception
-│   │   ├── decision_policy.py   # Strategy pattern for decisions
-│   │   ├── actions.py           # Command pattern for actions
-│   │   ├── action_executor.py   # Action execution system
-│   │   ├── memory.py            # Experience storage
-│   │   └── needs.py             # Agent needs/drives hierarchy
+│   │   ├── action.py            # Abstract Action base class
+│   │   ├── move.py              # Move to new position
+│   │   ├── gather.py            # Collect resources
+│   │   ├── rest.py              # Recover energy
+│   │   ├── trade.py             # Exchange resources (skeleton)
+│   │   ├── attack.py            # Combat actions (skeleton)
+│   │   └── alliance.py          # Form alliances (skeleton)
+│   ├── policies/                 # Decision policies (Strategy pattern) ✓ IMPLEMENTED
+│   │   ├── __init__.py
+│   │   ├── policy.py            # Abstract DecisionPolicy base class
+│   │   ├── selfish.py           # Individual survival strategy
+│   │   ├── cooperative.py       # Group benefit strategy (skeleton)
+│   │   └── aggressive.py        # Competitive strategy (skeleton)
 │   ├── social/                   # Social systems (NEW)
 │   │   ├── __init__.py
 │   │   ├── group.py             # Composite pattern for groups
