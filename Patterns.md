@@ -283,25 +283,128 @@ Central place to look up factories, prototypes, and generators. Easy to add new 
 ---
 
 ### Template Method
-**Implicitly used**
+**Used**
 
 **Where:**
 - [src/generators/world_generator.py:33-266](src/generators/world_generator.py#L33-L266)
+- [src/agents/agent.py](src/agents/agent.py) - Agent.update() lifecycle
+- [src/social/social_entity.py](src/social/social_entity.py) - join/leave operations
 
 **Why:**
-WorldGenerator has common steps in base class, subclasses fill in specifics. Not a formal implementation.
+WorldGenerator has common steps in base class, subclasses fill in specifics. Agent.update() orchestrates sense-decide-act cycle. SocialEntity.join()/leave() define flow with hooks for subclasses.
+
+---
+
+### Observer
+**Used**
+
+**Where:**
+- [src/inventory/observers.py](src/inventory/observers.py) - Inventory change notifications
+- [src/social/social_entity.py](src/social/social_entity.py) - SocialEntityObserver for membership changes
+- [src/social/relationships.py](src/social/relationships.py) - RelationshipObserver
+- [src/social/reputation.py](src/social/reputation.py) - ReputationObserver
+
+**Why:**
+Decouple event sources from listeners. Inventory changes, membership changes, relationship updates, and reputation changes all notify interested parties without tight coupling.
+
+---
+
+## Social System Patterns
+
+### Abstract Base Class (Social Entities)
+**Used**
+
+**Where:**
+- [src/social/social_entity.py](src/social/social_entity.py) - SocialEntity base class
+- [src/social/faction.py](src/social/faction.py) - Faction extends SocialEntity
+- [src/social/group.py](src/social/group.py) - Group extends SocialEntity
+
+**Why:**
+Defines common interface for all social structures (factions, groups, alliances). Subclasses implement specific behavior while sharing membership management logic.
+
+---
+
+### Strategy (Governance)
+**Used**
+
+**Where:**
+- [src/social/faction.py](src/social/faction.py) - GovernanceStrategy, AutocracyGovernance, OligarchyGovernance, DemocracyGovernance, MeritocracyGovernance
+
+**Why:**
+Factions can have different governance styles that affect decision-making, succession, and authority. Swap governance at design time or runtime.
+
+---
+
+### Strategy (Reputation Effects)
+**Used**
+
+**Where:**
+- [src/social/reputation.py](src/social/reputation.py) - ReputationEffects, StandardReputationEffects
+
+**Why:**
+Different factions can apply different effects based on reputation tier. Trade modifiers, service access, and territory restrictions vary by strategy.
+
+---
+
+### Factory Method (Social Entities)
+**Used**
+
+**Where:**
+- [src/social/factory.py](src/social/factory.py) - SocialEntityFactory, FactionFactory, GroupFactory
+
+**Why:**
+Encapsulate creation of factions and groups with sensible defaults. Convenience methods like create_hunting_party() for common configurations.
+
+---
+
+### Registry (Social Entity Factories)
+**Used**
+
+**Where:**
+- [src/social/factory.py](src/social/factory.py) - SocialEntityFactoryRegistry
+
+**Why:**
+Central lookup for social entity factories by type. Singleton pattern with reset for testing.
+
+---
+
+### Flyweight (Governance Strategies)
+**Used**
+
+**Where:**
+- [src/social/factory.py](src/social/factory.py) - FactionFactory._governance_strategies
+
+**Why:**
+Governance strategy instances are stateless and shared across all factions of the same governance type. Reduces memory usage.
+
+---
+
+### Immutable (Social Records)
+**Used**
+
+**Where:**
+- [src/social/social_entity.py](src/social/social_entity.py) - Membership dataclass
+- [src/social/relationships.py](src/social/relationships.py) - RelationshipModifier
+- [src/social/reputation.py](src/social/reputation.py) - ReputationChange, ReputationThresholds
+
+**Why:**
+Membership records, relationship modifiers, and reputation change events should not be modified after creation. Ensures audit trail integrity.
 
 ---
 
 ## Summary
 
-**Fully implemented:** 18 patterns
+**Fully implemented:** 24 patterns
 - SOLID principles (all 5)
-- Creational: Singleton, Immutable, Abstract Factory, Factory Method, Marker, Proxy, Prototype, Object Pool
+- Creational: Singleton, Immutable, Abstract Factory, Factory Method, Marker, Proxy, Prototype, Object Pool, Flyweight
 - Structural: Iterator, Facade, Registry
-- Behavioral: Command, Strategy
+- Behavioral: Command, Strategy, Template Method, Observer
 
-**Partially implemented:** 3 patterns
-- Builder, Bridge, Template Method
+**Social System patterns:** 8 patterns
+- Abstract Base Class, Strategy (Governance), Strategy (Reputation Effects)
+- Factory Method, Registry, Flyweight, Immutable, Observer
 
-**Note:** Template Method is used throughout (Agent.update(), WorldGenerator) but not as formal standalone implementation.
+**Partially implemented:** 2 patterns
+- Builder, Bridge
+
+**Note:** Template Method is now formally used in Agent.update(), WorldGenerator, and SocialEntity join/leave operations.
