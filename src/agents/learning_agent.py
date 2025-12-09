@@ -7,15 +7,24 @@ to improve its behavior over time through experience.
 Design Patterns:
     - Strategy Pattern: Learning policy is configurable
     - Memento Pattern: Q-table can be saved/restored
+    - Template Method: Inherits sense-decide-act lifecycle
 
 SOLID Principles:
     - Single Responsibility: Manages learning and decision-making
     - Open/Closed: Learning algorithm can be extended
     - Liskov Substitution: Can be used anywhere Agent is expected
+
+Integration:
+    - Uses all Action classes for action space
+    - Uses World for state observation
+    - Uses agent traits for state encoding
 """
 
 from __future__ import annotations
-from typing import Optional, Dict, Tuple, Any, TYPE_CHECKING
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from enum import Enum
+from typing import Optional, Dict, Tuple, Any, List, TYPE_CHECKING
 import json
 
 import sys
@@ -28,6 +37,241 @@ from world.position import Position
 
 if TYPE_CHECKING:
     from world.world import World
+    from actions.action import Action
+
+
+class StateLevel(Enum):
+    """Discrete levels for state encoding."""
+    CRITICAL = "critical"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+
+@dataclass
+class EncodedState:
+    """
+    Encoded state representation for Q-table.
+
+    Hashable representation of the agent's perception
+    suitable for use as Q-table keys.
+
+    Attributes:
+        energy_level: Discretized energy level
+        health_level: Discretized health level
+        has_resources_nearby: Whether resources are accessible
+        has_enemies_nearby: Whether enemies are nearby
+        has_allies_nearby: Whether allies are nearby
+        terrain_type: Current terrain type string
+    """
+    energy_level: StateLevel
+    health_level: StateLevel
+    has_resources_nearby: bool
+    has_enemies_nearby: bool
+    has_allies_nearby: bool
+    terrain_type: str
+
+    def __hash__(self) -> int:
+        """Make state hashable for Q-table."""
+        return hash((
+            self.energy_level,
+            self.health_level,
+            self.has_resources_nearby,
+            self.has_enemies_nearby,
+            self.has_allies_nearby,
+            self.terrain_type
+        ))
+
+
+class StateEncoder:
+    """
+    Encodes world state for Q-table keys.
+
+    Converts continuous sensor data into discrete, hashable
+    state representations suitable for Q-learning.
+
+    Design Pattern: Strategy (interchangeable encoding methods)
+    """
+
+    # Thresholds for discretizing values
+    CRITICAL_THRESHOLD: float = 15.0
+    LOW_THRESHOLD: float = 30.0
+    MEDIUM_THRESHOLD: float = 70.0
+
+    @classmethod
+    def encode_state(cls, sensor_data: Any, agent: Agent) -> EncodedState:
+        """
+        Encode current state as hashable object.
+
+        Discretizes continuous values into categorical levels
+        for efficient Q-table storage.
+
+        Args:
+            sensor_data: Dict containing perception info
+            agent: The learning agent
+
+        Returns:
+            EncodedState: Hashable state representation
+        """
+        # Discretize energy level
+        energy_percent = (agent.energy / agent.max_energy) * 100 if agent.max_energy > 0 else 0
+        energy_level = cls._discretize_level(energy_percent)
+
+        # Discretize health level
+        health_percent = (agent.health / agent.max_health) * 100 if agent.max_health > 0 else 0
+        health_level = cls._discretize_level(health_percent)
+
+        # Check for nearby entities
+        nearby_resources = sensor_data.get('nearby_resources', [])
+        nearby_agents = sensor_data.get('nearby_agents', [])
+        enemies = set(sensor_data.get('enemies', []))
+        allies = set(sensor_data.get('allies', []))
+
+        has_enemies = any(
+            (a[0] if isinstance(a, tuple) else a.agent_id) in enemies
+            for a in nearby_agents
+        )
+        has_allies = any(
+            (a[0] if isinstance(a, tuple) else a.agent_id) in allies
+            for a in nearby_agents
+        )
+
+        # Get terrain type
+        current_cell = sensor_data.get('current_cell')
+        terrain_type = str(current_cell.terrain.terrain_type.name) if current_cell else "unknown"
+
+        return EncodedState(
+            energy_level=energy_level,
+            health_level=health_level,
+            has_resources_nearby=len(nearby_resources) > 0,
+            has_enemies_nearby=has_enemies,
+            has_allies_nearby=has_allies,
+            terrain_type=terrain_type
+        )
+
+    @classmethod
+    def _discretize_level(cls, percent: float) -> StateLevel:
+        """Convert percentage to discrete level."""
+        if percent < cls.CRITICAL_THRESHOLD:
+            return StateLevel.CRITICAL
+        elif percent < cls.LOW_THRESHOLD:
+            return StateLevel.LOW
+        elif percent < cls.MEDIUM_THRESHOLD:
+            return StateLevel.MEDIUM
+        else:
+            return StateLevel.HIGH
+
+    @staticmethod
+    def get_available_actions(sensor_data: Any, agent: Agent) -> List[str]:
+        """
+        Get list of available action identifiers.
+
+        Returns action names that can be taken in current state.
+
+        Args:
+            sensor_data: Perception data
+            agent: The learning agent
+
+        Returns:
+            List[str]: Available action identifiers
+        """
+        actions = ["rest"]  # Always available
+
+        # Check if can gather
+        nearby_resources = sensor_data.get('nearby_resources', [])
+        if nearby_resources:
+            actions.append("gather")
+
+        # Check if can move (4 directions)
+        actions.extend(["move_north", "move_south", "move_east", "move_west"])
+
+        # Check if can trade
+        nearby_agents = sensor_data.get('nearby_agents', [])
+        allies = set(sensor_data.get('allies', []))
+        if any((a[0] if isinstance(a, tuple) else a.agent_id) in allies for a in nearby_agents):
+            actions.append("trade")
+
+        # Check if can attack
+        enemies = set(sensor_data.get('enemies', []))
+        if any((a[0] if isinstance(a, tuple) else a.agent_id) in enemies for a in nearby_agents):
+            actions.append("attack")
+
+        return actions
+
+
+class RewardCalculator:
+    """
+    Calculates rewards for Q-learning updates.
+
+    Provides consistent reward signals for different outcomes.
+
+    Design Pattern: Strategy (interchangeable reward schemes)
+    """
+
+    # Reward values
+    GATHER_REWARD: float = 10.0
+    HEALTH_INCREASE_REWARD: float = 5.0
+    ENERGY_INCREASE_REWARD: float = 3.0
+    DAMAGE_PENALTY: float = -5.0
+    DEATH_PENALTY: float = -100.0
+    TRADE_SUCCESS_REWARD: float = 15.0
+    COMBAT_VICTORY_REWARD: float = 20.0
+    COMBAT_DEFEAT_PENALTY: float = -15.0
+    MOVE_COST: float = -1.0
+
+    @classmethod
+    def calculate_reward(
+        cls,
+        pre_state: Dict[str, float],
+        post_state: Dict[str, float],
+        action_type: str
+    ) -> float:
+        """
+        Calculate reward based on state change.
+
+        Compares pre and post action states to determine reward.
+
+        Args:
+            pre_state: State before action {health, energy, resources}
+            post_state: State after action {health, energy, resources}
+            action_type: Type of action taken
+
+        Returns:
+            float: Reward value
+        """
+        reward = 0.0
+
+        # Check for death
+        if post_state.get('health', 0) <= 0:
+            return cls.DEATH_PENALTY
+
+        # Health change
+        health_diff = post_state.get('health', 0) - pre_state.get('health', 0)
+        if health_diff > 0:
+            reward += cls.HEALTH_INCREASE_REWARD
+        elif health_diff < 0:
+            reward += cls.DAMAGE_PENALTY
+
+        # Energy change (from eating food)
+        energy_diff = post_state.get('energy', 0) - pre_state.get('energy', 0)
+        if energy_diff > 0:
+            reward += cls.ENERGY_INCREASE_REWARD
+
+        # Resource gathering
+        resources_diff = post_state.get('resources', 0) - pre_state.get('resources', 0)
+        if resources_diff > 0:
+            reward += cls.GATHER_REWARD
+
+        # Action-specific rewards
+        if action_type == "move":
+            reward += cls.MOVE_COST
+        elif action_type == "trade":
+            reward += cls.TRADE_SUCCESS_REWARD
+        elif action_type == "attack":
+            # Would check combat outcome
+            pass
+
+        return reward
 
 
 class LearningAgent(Agent):

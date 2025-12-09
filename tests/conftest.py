@@ -4,6 +4,7 @@ This module provides reusable fixtures for setting up common test scenarios,
 including worlds, agents, resources, and positions. The fixtures are designed
 to be composable and minimize test setup duplication.
 """
+from __future__ import annotations
 import pytest
 from typing import List, Tuple
 import sys
@@ -440,3 +441,211 @@ def agent_with_resources(basic_agent, small_world, factory_registry) -> Tuple[Ba
             water_cell.add_resource(water)
 
     return basic_agent, small_world
+
+
+# ============================================================================
+# ECONOMY FIXTURES
+# ============================================================================
+
+@pytest.fixture
+def fixed_pricing():
+    """Provide fixed pricing strategy."""
+    from economy.pricing import FixedPricing
+    return FixedPricing({"food": 5.0, "wood": 3.0, "stone": 8.0})
+
+
+@pytest.fixture
+def supply_demand_pricing():
+    """Provide supply/demand pricing strategy."""
+    from economy.pricing import SupplyDemandPricing, PriceVolatility
+    return SupplyDemandPricing(volatility=PriceVolatility.MODERATE)
+
+
+@pytest.fixture
+def price_tracker():
+    """Provide price tracker instance."""
+    from economy.pricing import PriceTracker
+    return PriceTracker(max_history=100)
+
+
+@pytest.fixture
+def marketplace(fixed_pricing):
+    """Provide marketplace with fixed pricing."""
+    from economy.marketplace import Marketplace, MarketplaceConfig
+    config = MarketplaceConfig(
+        enable_price_tracking=True,
+        transaction_fee_rate=0.0
+    )
+    return Marketplace(pricing_strategy=fixed_pricing, config=config)
+
+
+# ============================================================================
+# SIMULATION FIXTURES
+# ============================================================================
+
+@pytest.fixture
+def sequential_scheduler():
+    """Provide sequential scheduler."""
+    from simulation.scheduler import SequentialScheduler
+    return SequentialScheduler()
+
+
+@pytest.fixture
+def random_scheduler():
+    """Provide random scheduler with fixed seed for reproducibility."""
+    from simulation.scheduler import RandomScheduler
+    return RandomScheduler(seed=42)
+
+
+@pytest.fixture
+def priority_scheduler():
+    """Provide priority scheduler."""
+    from simulation.scheduler import PriorityScheduler
+    return PriorityScheduler()
+
+
+@pytest.fixture
+def analytics_collector():
+    """Provide analytics collector."""
+    from simulation.analytics import AnalyticsCollector
+    return AnalyticsCollector(history_limit=100)
+
+
+@pytest.fixture
+def simulation_config():
+    """Provide simulation configuration."""
+    from simulation.engine import SimulationConfig
+    return SimulationConfig(
+        max_steps=100,
+        enable_analytics=True,
+        stop_on_extinction=True
+    )
+
+
+# ============================================================================
+# LEARNING AGENT FIXTURES
+# ============================================================================
+
+@pytest.fixture
+def learning_agent(position_origin, balanced_traits):
+    """Provide learning agent with default parameters."""
+    from agents.learning_agent import LearningAgent
+    return LearningAgent(
+        name="LearnerAgent",
+        position=position_origin,
+        traits=balanced_traits,
+        learning_rate=0.1,
+        discount_factor=0.95,
+        epsilon=0.2
+    )
+
+
+@pytest.fixture
+def trained_learning_agent(learning_agent):
+    """Provide learning agent with pre-populated Q-table."""
+    # Add some Q-values for testing
+    learning_agent.set_q_value(("state1", "move"), 0.5)
+    learning_agent.set_q_value(("state1", "gather"), 0.8)
+    learning_agent.set_q_value(("state1", "rest"), 0.3)
+    learning_agent.set_q_value(("state2", "move"), 0.6)
+    return learning_agent
+
+
+# ============================================================================
+# AI AGENT FIXTURES
+# ============================================================================
+
+@pytest.fixture
+def mock_llm_provider():
+    """Provide mock LLM provider for testing."""
+    from agents.ai_agent import MockLLMProvider
+    return MockLLMProvider()
+
+
+@pytest.fixture
+def ai_agent(position_origin, balanced_traits):
+    """Provide AI agent with mock provider."""
+    from agents.ai_agent import AIAgent
+    return AIAgent(
+        name="AIAgent",
+        position=position_origin,
+        traits=balanced_traits,
+        model="mock-1.0"
+    )
+
+
+# ============================================================================
+# NPC AGENT FIXTURES
+# ============================================================================
+
+@pytest.fixture
+def patrol_script():
+    """Provide patrol script with test waypoints."""
+    from agents.npc_agent import PatrolScript
+    return PatrolScript(
+        waypoints=[Position(0, 0), Position(5, 0), Position(5, 5), Position(0, 5)],
+        loop=True
+    )
+
+
+@pytest.fixture
+def guard_script():
+    """Provide guard script with patrol and combat settings."""
+    from agents.npc_agent import GuardScript
+    return GuardScript(
+        patrol_waypoints=[Position(5, 5), Position(10, 5)],
+        guard_radius=5.0,
+        attack_threshold=20.0
+    )
+
+
+@pytest.fixture
+def merchant_script():
+    """Provide merchant script at fixed location."""
+    from agents.npc_agent import MerchantScript
+    return MerchantScript(
+        home_position=Position(25, 25),
+        trade_radius=3.0
+    )
+
+
+@pytest.fixture
+def npc_guard(position_center, balanced_traits, guard_script):
+    """Provide NPC guard agent."""
+    from agents.npc_agent import NPCAgent
+    return NPCAgent(
+        name="Guard",
+        position=position_center,
+        traits=balanced_traits,
+        behavior_script=guard_script
+    )
+
+
+@pytest.fixture
+def npc_merchant(balanced_traits, merchant_script):
+    """Provide NPC merchant agent."""
+    from agents.npc_agent import NPCAgent
+    return NPCAgent(
+        name="Merchant",
+        position=Position(25, 25),
+        traits=balanced_traits,
+        behavior_script=merchant_script
+    )
+
+
+# ============================================================================
+# POLICY FIXTURES
+# ============================================================================
+
+@pytest.fixture
+def cooperative_policy():
+    """Provide cooperative policy."""
+    from policies.cooperative import CooperativePolicy
+    return CooperativePolicy()
+
+
+@pytest.fixture
+def aggressive_policy():
+    """Provide aggressive policy."""
+    from policies.aggressive import AggressivePolicy
+    return AggressivePolicy(min_win_probability=0.6)

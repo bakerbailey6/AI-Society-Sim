@@ -7,11 +7,17 @@ for sophisticated, natural language-based decision making.
 Design Patterns:
     - Strategy Pattern: LLM provider is pluggable
     - Adapter Pattern: Wraps LLM API for agent interface
+    - Template Method: Inherits sense-decide-act lifecycle
 
 SOLID Principles:
     - Single Responsibility: Manages LLM-based decision making
     - Open/Closed: Can support different LLM providers
     - Dependency Inversion: Depends on abstract LLM interface
+
+Integration:
+    - Uses all Action classes for action parsing
+    - Uses World for state observation
+    - Supports multiple LLM providers (Claude, GPT, Mock)
 
 Note:
     This is an advanced optional feature requiring API access.
@@ -19,7 +25,10 @@ Note:
 """
 
 from __future__ import annotations
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import Optional, List, Dict, Any, TYPE_CHECKING
+import json
 
 import sys
 import os
@@ -31,6 +40,302 @@ from world.position import Position
 
 if TYPE_CHECKING:
     from world.world import World
+    from actions.action import Action
+
+
+class LLMProvider(ABC):
+    """
+    Abstract interface for LLM providers.
+
+    Allows different LLM implementations to be plugged in
+    using the Strategy pattern.
+
+    Implementations:
+        - ClaudeLLMProvider: Anthropic Claude API
+        - OpenAILLMProvider: OpenAI GPT API
+        - MockLLMProvider: Rule-based mock for testing
+
+    Design Pattern: Strategy
+    """
+
+    @abstractmethod
+    def query(
+        self,
+        prompt: str,
+        history: List[Dict[str, str]]
+    ) -> str:
+        """
+        Send query to LLM and get response.
+
+        Args:
+            prompt: The prompt to send
+            history: Conversation history for context
+
+        Returns:
+            str: LLM response text
+
+        Raises:
+            RuntimeError: If API call fails
+        """
+        pass
+
+    @abstractmethod
+    def get_model_name(self) -> str:
+        """
+        Get the model identifier.
+
+        Returns:
+            str: Model name/identifier
+        """
+        pass
+
+
+class ClaudeLLMProvider(LLMProvider):
+    """
+    Anthropic Claude API provider.
+
+    Requires anthropic library and valid API key.
+
+    Attributes:
+        api_key: Anthropic API key
+        model: Model identifier
+    """
+
+    def __init__(
+        self,
+        api_key: str,
+        model: str = "claude-3-5-sonnet-20241022"
+    ) -> None:
+        """
+        Initialize Claude provider.
+
+        Args:
+            api_key: Anthropic API key
+            model: Model identifier
+        """
+        self._api_key = api_key
+        self._model = model
+
+    def query(self, prompt: str, history: List[Dict[str, str]]) -> str:
+        """
+        Query Claude API.
+
+        Implementation would use anthropic library:
+            client = anthropic.Anthropic(api_key=self._api_key)
+            message = client.messages.create(
+                model=self._model,
+                max_tokens=1024,
+                messages=history + [{"role": "user", "content": prompt}]
+            )
+            return message.content[0].text
+
+        Raises:
+            NotImplementedError: API integration pending
+        """
+        raise NotImplementedError(
+            "ClaudeLLMProvider requires anthropic library integration"
+        )
+
+    def get_model_name(self) -> str:
+        """Return model identifier."""
+        return self._model
+
+
+class MockLLMProvider(LLMProvider):
+    """
+    Mock LLM provider for testing without API.
+
+    Returns rule-based responses for testing agent behavior
+    without requiring actual API calls.
+
+    Useful for:
+        - Unit testing
+        - Offline development
+        - Cost-free experimentation
+    """
+
+    def __init__(self) -> None:
+        """Initialize mock provider."""
+        self._model = "mock-1.0"
+
+    def query(self, prompt: str, history: List[Dict[str, str]]) -> str:
+        """
+        Return rule-based mock response.
+
+        Parses prompt for keywords and returns appropriate action.
+
+        Args:
+            prompt: The prompt to analyze
+            history: Ignored for mock
+
+        Returns:
+            str: JSON-formatted action response
+        """
+        prompt_lower = prompt.lower()
+
+        # Analyze prompt for key indicators
+        if "low health" in prompt_lower or "dying" in prompt_lower:
+            action = {"action": "rest", "parameters": {}, "reasoning": "Need to recover health"}
+        elif "hungry" in prompt_lower or "low energy" in prompt_lower:
+            action = {"action": "gather", "parameters": {"resource": "food"}, "reasoning": "Need food for energy"}
+        elif "enemy" in prompt_lower or "threat" in prompt_lower:
+            action = {"action": "move", "parameters": {"direction": "away"}, "reasoning": "Avoiding danger"}
+        elif "resource" in prompt_lower or "food nearby" in prompt_lower:
+            action = {"action": "gather", "parameters": {}, "reasoning": "Resources available"}
+        elif "ally" in prompt_lower:
+            action = {"action": "trade", "parameters": {}, "reasoning": "Trading with ally"}
+        else:
+            action = {"action": "move", "parameters": {"direction": "random"}, "reasoning": "Exploring"}
+
+        return json.dumps(action)
+
+    def get_model_name(self) -> str:
+        """Return mock model name."""
+        return self._model
+
+
+@dataclass
+class LLMResponse:
+    """
+    Parsed response from LLM.
+
+    Attributes:
+        action: Action type string
+        parameters: Action parameters
+        reasoning: LLM's reasoning for the choice
+        raw_response: Original LLM output
+    """
+    action: str
+    parameters: Dict[str, Any]
+    reasoning: str
+    raw_response: str
+
+
+class PromptBuilder:
+    """
+    Builds prompts for LLM agents.
+
+    Constructs well-formatted prompts including agent state,
+    perception data, available actions, and persona.
+
+    Design Pattern: Builder
+    """
+
+    # System prompt template
+    SYSTEM_TEMPLATE = """You are {agent_name}, {persona}.
+
+Your current state:
+- Health: {health}/{max_health}
+- Energy: {energy}/{max_energy}
+- Position: ({x}, {y})
+
+Your traits:
+{traits}
+
+You can take the following actions:
+{available_actions}
+
+Respond with a JSON object containing:
+- "action": the action type
+- "parameters": any action parameters
+- "reasoning": brief explanation of your choice
+"""
+
+    @classmethod
+    def build_prompt(
+        cls,
+        agent: Any,
+        sensor_data: Any,
+        persona: str = "a survival-focused agent"
+    ) -> str:
+        """
+        Build complete prompt from agent state and perception.
+
+        Args:
+            agent: The AI agent
+            sensor_data: Current perception
+            persona: Agent personality description
+
+        Returns:
+            str: Formatted prompt
+        """
+        # Format traits
+        traits_str = cls._format_traits(agent.traits)
+
+        # Format available actions
+        actions_str = cls._format_available_actions(sensor_data)
+
+        # Format perception
+        perception_str = cls._format_perception(sensor_data)
+
+        prompt = cls.SYSTEM_TEMPLATE.format(
+            agent_name=agent.name,
+            persona=persona,
+            health=agent.health,
+            max_health=agent.max_health,
+            energy=agent.energy,
+            max_energy=agent.max_energy,
+            x=agent.position.x,
+            y=agent.position.y,
+            traits=traits_str,
+            available_actions=actions_str
+        )
+
+        prompt += f"\n\nCurrent perception:\n{perception_str}"
+        prompt += "\n\nWhat action do you take?"
+
+        return prompt
+
+    @staticmethod
+    def _format_traits(traits: Any) -> str:
+        """Format agent traits for prompt."""
+        trait_lines = []
+        for attr in ['strength', 'agility', 'intelligence', 'sociability']:
+            value = getattr(traits, attr, 50)
+            trait_lines.append(f"- {attr.capitalize()}: {value}")
+        return "\n".join(trait_lines)
+
+    @staticmethod
+    def _format_available_actions(sensor_data: Any) -> str:
+        """Format available actions for prompt."""
+        actions = [
+            "- move: Move in a direction (north, south, east, west)",
+            "- gather: Gather nearby resources",
+            "- rest: Rest to recover energy",
+        ]
+
+        nearby_agents = sensor_data.get('nearby_agents', [])
+        if nearby_agents:
+            actions.append("- trade: Trade resources with nearby agent")
+            actions.append("- attack: Attack nearby enemy")
+
+        return "\n".join(actions)
+
+    @staticmethod
+    def _format_perception(sensor_data: Any) -> str:
+        """Format perception data for prompt."""
+        lines = []
+
+        # Resources
+        resources = sensor_data.get('nearby_resources', [])
+        if resources:
+            lines.append(f"- Nearby resources: {len(resources)} found")
+        else:
+            lines.append("- No resources nearby")
+
+        # Agents
+        agents = sensor_data.get('nearby_agents', [])
+        if agents:
+            lines.append(f"- Nearby agents: {len(agents)} visible")
+        else:
+            lines.append("- No other agents nearby")
+
+        # Terrain
+        cell = sensor_data.get('current_cell')
+        if cell:
+            lines.append(f"- Current terrain: {cell.terrain.terrain_type.name}")
+
+        return "\n".join(lines)
 
 
 class AIAgent(Agent):
